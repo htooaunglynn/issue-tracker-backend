@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // BaseEntity contains common fields for all entities
@@ -16,7 +17,7 @@ type BaseEntity struct {
 }
 
 // BeforeCreate sets the UUID if not already set
-func (b *BaseEntity) BeforeCreate() error {
+func (b *BaseEntity) BeforeCreate(tx *gorm.DB) error {
 	if b.ID == uuid.Nil {
 		b.ID = uuid.New()
 	}
@@ -96,7 +97,7 @@ type Issue struct {
 	BaseEntity
 	ProjectID   uuid.UUID
 	Project     Project `gorm:"foreignKey:ProjectID;index"`
-	Number      int     `gorm:"index:idx_project_number"`
+	Number      int
 	Title       string  `gorm:"index"`
 	Description string
 	Type        IssueType
@@ -107,8 +108,6 @@ type Issue struct {
 	AssigneeID  *uuid.UUID
 	Assignee    *User `gorm:"foreignKey:AssigneeID"`
 	DueDate     *time.Time
-
-	gorm.Index `gorm:"index:idx_project_number;unique"`
 }
 
 type IssueType string
@@ -146,8 +145,6 @@ type Label struct {
 	Project   Project `gorm:"foreignKey:ProjectID"`
 	Name      string
 	Color     string
-
-	gorm.Index `gorm:"uniqueIndex:idx_project_label"`
 }
 
 // IssueLabel join table

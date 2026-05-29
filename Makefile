@@ -25,10 +25,14 @@ run:
 	go run ./cmd/api
 
 seed:
-	@echo "Seed data not yet implemented"
+	@echo "Seed runs automatically in development mode on startup."
+	@echo "To seed manually, ensure DATABASE_URL is set and run:"
+	@echo "  go run ./cmd/api"
 
 migrate:
-	@echo "Migrations not yet implemented"
+	@echo "Migrations run automatically on startup via golang-migrate embedded runner."
+	@echo "To run migrations manually against a local DB:"
+	@echo "  DATABASE_URL='postgres://localhost:5432/issuetracker?sslmode=disable' go run ./cmd/api"
 
 test:
 	go test -v ./...
