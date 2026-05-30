@@ -8,6 +8,11 @@ import (
 	"github.com/htooaunglynn/issue-tracker-backend/internal/config"
 	"github.com/htooaunglynn/issue-tracker-backend/internal/db"
 	"github.com/htooaunglynn/issue-tracker-backend/internal/db/seed"
+	"github.com/htooaunglynn/issue-tracker-backend/internal/domain"
+	"github.com/htooaunglynn/issue-tracker-backend/internal/handler"
+	"github.com/htooaunglynn/issue-tracker-backend/internal/middleware"
+	"github.com/htooaunglynn/issue-tracker-backend/internal/repository"
+	"github.com/htooaunglynn/issue-tracker-backend/internal/service"
 )
 
 func main() {
@@ -30,9 +35,25 @@ func main() {
 	if cfg.Server.Env == "development" {
 		if err := seed.Run(gormDB); err != nil {
 			log.Printf("seed warning: %v", err)
-			// non-fatal: seed failures should not kill the server
 		}
 	}
+
+	// --- Dependency wiring ---
+
+	// Repositories
+	userRepo := repository.NewUserRepository(gormDB)
+	refreshTokenRepo := repository.NewRefreshTokenRepository(gormDB)
+	passwordResetRepo := repository.NewPasswordResetRepository(gormDB)
+
+	// Services
+	authSvc := service.NewAuthService(userRepo, refreshTokenRepo, passwordResetRepo, cfg.JWT, gormDB)
+	userSvc := service.NewUserService(userRepo)
+
+	// Handlers
+	authH := handler.NewAuthHandler(authSvc)
+	userH := handler.NewUserHandler(userSvc)
+
+	// --- Routes ---
 
 	engine := gin.Default()
 
@@ -50,6 +71,30 @@ func main() {
 		}
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "db": "up"})
 	})
+
+	v1 := engine.Group("/api/v1")
+	{
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/register", authH.Register)
+			auth.POST("/login", authH.Login)
+			auth.POST("/refresh", authH.Refresh)
+			auth.POST("/logout", authH.Logout)
+			auth.GET("/me", middleware.AuthRequired(cfg.JWT), authH.Me)
+			auth.POST("/password/forgot", authH.ForgotPassword)
+			auth.POST("/password/reset", authH.ResetPassword)
+		}
+
+		users := v1.Group("/users")
+		{
+			users.PATCH("/me", middleware.AuthRequired(cfg.JWT), authH.UpdateProfile)
+			users.PATCH("/me/password", middleware.AuthRequired(cfg.JWT), authH.ChangePassword)
+			users.GET("", middleware.AuthRequired(cfg.JWT), middleware.RequireRole(domain.RoleAdmin), userH.ListUsers)
+			users.GET("/:id", middleware.AuthRequired(cfg.JWT), userH.GetUser)
+			users.PATCH("/:id", middleware.AuthRequired(cfg.JWT), middleware.RequireRole(domain.RoleAdmin), userH.UpdateUser)
+			users.DELETE("/:id", middleware.AuthRequired(cfg.JWT), middleware.RequireRole(domain.RoleAdmin), userH.DeleteUser)
+		}
+	}
 
 	if err := engine.Run(cfg.Server.Port); err != nil {
 		log.Fatalf("failed to start server: %v", err)
