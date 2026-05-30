@@ -44,6 +44,30 @@ func handleServiceError(c *gin.Context, err error) {
 		c.JSON(http.StatusUnauthorized, response.ErrorSimple("TOKEN_INVALID", err.Error()))
 	case service.ErrInvalidPassword:
 		c.JSON(http.StatusBadRequest, response.ErrorSimple("INVALID_PASSWORD", err.Error()))
+	case service.ErrProjectNotFound:
+		c.JSON(http.StatusNotFound, response.ErrorSimple("NOT_FOUND", err.Error()))
+	case service.ErrProjectKeyTaken:
+		c.JSON(http.StatusConflict, response.ErrorSimple("PROJECT_KEY_TAKEN", err.Error()))
+	case service.ErrAlreadyMember:
+		c.JSON(http.StatusConflict, response.ErrorSimple("ALREADY_MEMBER", err.Error()))
+	case service.ErrMemberNotFound:
+		c.JSON(http.StatusNotFound, response.ErrorSimple("NOT_FOUND", err.Error()))
+	case service.ErrLabelNotFound:
+		c.JSON(http.StatusNotFound, response.ErrorSimple("NOT_FOUND", err.Error()))
+	case service.ErrLabelNameTaken:
+		c.JSON(http.StatusConflict, response.ErrorSimple("LABEL_NAME_TAKEN", err.Error()))
+	case service.ErrNotProjectMember:
+		c.JSON(http.StatusForbidden, response.ErrorSimple("FORBIDDEN", err.Error()))
+	case service.ErrForbidden:
+		c.JSON(http.StatusForbidden, response.ErrorSimple("FORBIDDEN", err.Error()))
+	case service.ErrIssueNotFound:
+		c.JSON(http.StatusNotFound, response.ErrorSimple("NOT_FOUND", err.Error()))
+	case service.ErrCommentNotFound:
+		c.JSON(http.StatusNotFound, response.ErrorSimple("NOT_FOUND", err.Error()))
+	case service.ErrAttachmentNotFound:
+		c.JSON(http.StatusNotFound, response.ErrorSimple("NOT_FOUND", err.Error()))
+	case service.ErrFileTooLarge:
+		c.JSON(http.StatusRequestEntityTooLarge, response.ErrorSimple("FILE_TOO_LARGE", err.Error()))
 	default:
 		c.JSON(http.StatusInternalServerError, response.ErrorSimple("INTERNAL_ERROR", "an unexpected error occurred"))
 	}

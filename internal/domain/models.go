@@ -27,21 +27,21 @@ func (b *BaseEntity) BeforeCreate(tx *gorm.DB) error {
 // User entity
 type User struct {
 	BaseEntity
-	Name         string    `gorm:"index"`
-	Email        string    `gorm:"uniqueIndex"`
-	PasswordHash string    `gorm:"type:text"`
+	Name         string `gorm:"index"`
+	Email        string `gorm:"uniqueIndex"`
+	PasswordHash string `gorm:"type:text"`
 	GlobalRole   GlobalRole
 	AvatarURL    *string
-	IsActive     bool      `gorm:"default:true"`
+	IsActive     bool `gorm:"default:true"`
 }
 
 type GlobalRole string
 
 const (
-	RoleAdmin      GlobalRole = "admin"
-	RoleManager    GlobalRole = "manager"
-	RoleDeveloper  GlobalRole = "developer"
-	RoleReporter   GlobalRole = "reporter"
+	RoleAdmin     GlobalRole = "admin"
+	RoleManager   GlobalRole = "manager"
+	RoleDeveloper GlobalRole = "developer"
+	RoleReporter  GlobalRole = "reporter"
 )
 
 // Scan implements sql.Scanner interface
@@ -86,10 +86,10 @@ type ProjectMember struct {
 type ProjectRole string
 
 const (
-	ProjectRoleAdmin      ProjectRole = "admin"
-	ProjectRoleManager    ProjectRole = "manager"
-	ProjectRoleDeveloper  ProjectRole = "developer"
-	ProjectRoleReporter   ProjectRole = "reporter"
+	ProjectRoleAdmin     ProjectRole = "admin"
+	ProjectRoleManager   ProjectRole = "manager"
+	ProjectRoleDeveloper ProjectRole = "developer"
+	ProjectRoleReporter  ProjectRole = "reporter"
 )
 
 // Issue entity
@@ -98,7 +98,7 @@ type Issue struct {
 	ProjectID   uuid.UUID
 	Project     Project `gorm:"foreignKey:ProjectID;index"`
 	Number      int
-	Title       string  `gorm:"index"`
+	Title       string `gorm:"index"`
 	Description string
 	Type        IssueType
 	Priority    IssuePriority `gorm:"index"`
@@ -163,13 +163,22 @@ type Comment struct {
 	Body     string `gorm:"type:text"`
 }
 
+// CommentMention tracks @mentions within a comment
+type CommentMention struct {
+	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primary_key"`
+	CommentID uuid.UUID `gorm:"index"`
+	UserID    uuid.UUID
+	User      User      `gorm:"foreignKey:UserID"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+}
+
 // Attachment entity
 type Attachment struct {
 	BaseEntity
 	IssueID    uuid.UUID
 	Issue      Issue `gorm:"foreignKey:IssueID"`
 	UploaderID uuid.UUID
-	Uploader   User   `gorm:"foreignKey:UploaderID"`
+	Uploader   User `gorm:"foreignKey:UploaderID"`
 	FileName   string
 	FilePath   string
 	MimeType   string
@@ -179,12 +188,12 @@ type Attachment struct {
 // IssueActivity entity (audit/history log)
 type IssueActivity struct {
 	BaseEntity
-	IssueID uuid.UUID
-	Issue   Issue `gorm:"foreignKey:IssueID;index"`
-	ActorID uuid.UUID
-	Actor   User `gorm:"foreignKey:ActorID"`
-	Action  ActivityAction
-	Field   *string
+	IssueID  uuid.UUID
+	Issue    Issue `gorm:"foreignKey:IssueID;index"`
+	ActorID  uuid.UUID
+	Actor    User `gorm:"foreignKey:ActorID"`
+	Action   ActivityAction
+	Field    *string
 	OldValue *string
 	NewValue *string
 }
@@ -192,54 +201,54 @@ type IssueActivity struct {
 type ActivityAction string
 
 const (
-	ActivityCreated      ActivityAction = "created"
-	ActivityUpdated      ActivityAction = "updated"
+	ActivityCreated       ActivityAction = "created"
+	ActivityUpdated       ActivityAction = "updated"
 	ActivityStatusChanged ActivityAction = "status_changed"
-	ActivityAssigned     ActivityAction = "assigned"
-	ActivityCommented    ActivityAction = "commented"
+	ActivityAssigned      ActivityAction = "assigned"
+	ActivityCommented     ActivityAction = "commented"
 )
 
 // Notification entity
 type Notification struct {
 	BaseEntity
-	UserID    uuid.UUID
-	User      User `gorm:"foreignKey:UserID;index"`
-	Type      NotificationType
-	Title     string
-	Message   string
+	UserID     uuid.UUID
+	User       User `gorm:"foreignKey:UserID;index"`
+	Type       NotificationType
+	Title      string
+	Message    string
 	EntityType string
 	EntityID   uuid.UUID
-	IsRead    bool      `gorm:"index"`
+	IsRead     bool `gorm:"index"`
 }
 
 type NotificationType string
 
 const (
-	NotificationAssignment NotificationType = "assignment"
-	NotificationComment    NotificationType = "comment"
+	NotificationAssignment   NotificationType = "assignment"
+	NotificationComment      NotificationType = "comment"
 	NotificationStatusChange NotificationType = "status_change"
-	NotificationMention    NotificationType = "mention"
+	NotificationMention      NotificationType = "mention"
 )
 
 // AuditLog entity
 type AuditLog struct {
 	BaseEntity
-	ActorID    *uuid.UUID
-	Actor      *User `gorm:"foreignKey:ActorID"`
-	Action     string
+	ActorID      *uuid.UUID
+	Actor        *User `gorm:"foreignKey:ActorID"`
+	Action       string
 	ResourceType string
-	ResourceID string
-	Metadata   string `gorm:"type:jsonb"`
-	IP         string
-	UserAgent  string
+	ResourceID   string
+	Metadata     string `gorm:"type:jsonb"`
+	IP           string
+	UserAgent    string
 }
 
 // RefreshToken entity
 type RefreshToken struct {
 	BaseEntity
 	UserID    uuid.UUID
-	User      User      `gorm:"foreignKey:UserID;index"`
-	TokenHash string    `gorm:"index"`
+	User      User   `gorm:"foreignKey:UserID;index"`
+	TokenHash string `gorm:"index"`
 	ExpiresAt time.Time
 	Revoked   bool
 }
@@ -248,8 +257,8 @@ type RefreshToken struct {
 type PasswordReset struct {
 	BaseEntity
 	UserID    uuid.UUID
-	User      User      `gorm:"foreignKey:UserID"`
-	TokenHash string    `gorm:"index"`
+	User      User   `gorm:"foreignKey:UserID"`
+	TokenHash string `gorm:"index"`
 	ExpiresAt time.Time
 	Used      bool
 }

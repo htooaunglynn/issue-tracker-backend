@@ -13,6 +13,7 @@ type UserRepository interface {
 	Update(user *domain.User) error
 	List(offset, limit int) ([]domain.User, int64, error)
 	Delete(id uuid.UUID) error
+	FindMentionedUsers(projectID uuid.UUID, names []string) ([]domain.User, error)
 }
 
 type userRepository struct {
@@ -64,4 +65,19 @@ func (r *userRepository) List(offset, limit int) ([]domain.User, int64, error) {
 
 func (r *userRepository) Delete(id uuid.UUID) error {
 	return r.db.Model(&domain.User{}).Where("id = ?", id).Update("deleted_at", gorm.Expr("NOW()")).Error
+}
+
+// FindMentionedUsers finds project members whose name (lowercased, spaces stripped) matches any entry in names.
+func (r *userRepository) FindMentionedUsers(projectID uuid.UUID, names []string) ([]domain.User, error) {
+	if len(names) == 0 {
+		return nil, nil
+	}
+	var users []domain.User
+	err := r.db.
+		Joins("JOIN project_members pm ON pm.user_id = users.id").
+		Where("pm.project_id = ? AND pm.deleted_at IS NULL", projectID).
+		Where("users.deleted_at IS NULL").
+		Where("LOWER(REPLACE(users.name, ' ', '')) IN ?", names).
+		Find(&users).Error
+	return users, err
 }

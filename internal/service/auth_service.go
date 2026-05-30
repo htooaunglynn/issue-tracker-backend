@@ -28,11 +28,11 @@ type AuthService interface {
 }
 
 type authService struct {
-	userRepo         repository.UserRepository
-	refreshTokenRepo repository.RefreshTokenRepository
+	userRepo          repository.UserRepository
+	refreshTokenRepo  repository.RefreshTokenRepository
 	passwordResetRepo repository.PasswordResetRepository
-	jwtCfg           config.JWTConfig
-	auditDB          *gorm.DB
+	jwtCfg            config.JWTConfig
+	auditDB           *gorm.DB
 }
 
 func NewAuthService(
@@ -43,11 +43,11 @@ func NewAuthService(
 	db *gorm.DB,
 ) AuthService {
 	return &authService{
-		userRepo:         userRepo,
-		refreshTokenRepo: refreshTokenRepo,
+		userRepo:          userRepo,
+		refreshTokenRepo:  refreshTokenRepo,
 		passwordResetRepo: passwordResetRepo,
-		jwtCfg:           jwtCfg,
-		auditDB:          db,
+		jwtCfg:            jwtCfg,
+		auditDB:           db,
 	}
 }
 

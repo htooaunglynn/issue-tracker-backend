@@ -12,6 +12,12 @@ type Config struct {
 	JWT      JWTConfig
 	SMTP     SMTPConfig
 	CORS     CORSConfig
+	Upload   UploadConfig
+}
+
+type UploadConfig struct {
+	Dir     string
+	MaxSize int64 // bytes
 }
 
 type ServerConfig struct {
@@ -76,6 +82,10 @@ func Load() (*Config, error) {
 			AllowedOrigins: []string{"http://localhost:3000"},
 			AllowedMethods: []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
 			AllowedHeaders: []string{"Content-Type", "Authorization"},
+		},
+		Upload: UploadConfig{
+			Dir:     getEnv("UPLOAD_DIR", "./uploads"),
+			MaxSize: int64(getEnvInt("UPLOAD_MAX_SIZE_MB", 10)) * 1024 * 1024,
 		},
 	}, nil
 }
